@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -181,15 +182,42 @@ input::placeholder { color: var(--text-dim); opacity: 0.5; }
 
 /* ── SCORE TABLE ── */
 .score-table-wrap {
-  overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 0 14px; position: relative;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 14px;
+  position: relative;
+  /* iOS Safari requires a defined width on the scroll container */
+  width: 100%;
+  max-width: 100%;
+  display: block;
 }
-table { width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.85rem; }
+/* Inner div to force iOS to scroll rather than clip */
+.score-table-inner {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+}
+table {
+  width: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.85rem;
+}
 
-th.sticky-left, td.sticky-left { position: sticky; left: 0; z-index: 2; background: var(--surface); }
+th.sticky-left, td.sticky-left {
+  position: -webkit-sticky;
+  position: sticky;
+  left: 0; z-index: 2; background: var(--surface);
+}
 th.sticky-left { background: #e8f0eb; }
 tbody tr:nth-child(even) td.sticky-left { background: #f0f5f1; }
 
-th.sticky-right, td.sticky-right { position: sticky; right: 0; z-index: 2; background: var(--surface); }
+th.sticky-right, td.sticky-right {
+  position: -webkit-sticky;
+  position: sticky;
+  right: 0; z-index: 2; background: var(--surface);
+}
 th.sticky-right { background: #e8f0eb; }
 tbody tr:nth-child(even) td.sticky-right { background: #f0f5f1; }
 
@@ -341,10 +369,11 @@ tr.draw-row td.pn::before { content: "♛ "; color: var(--gold); }
   -webkit-overflow-scrolling: touch;
   margin-top: 10px;
   position: relative;
+  width: 100%;
+  display: block;
 }
 .detail-table {
-  width: max-content;
-  min-width: 100%;
+  width: auto;
   font-size: 0.8rem;
   border-collapse: separate;
   border-spacing: 0;
@@ -370,7 +399,9 @@ tr.draw-row td.pn::before { content: "♛ "; color: var(--gold); }
 
 /* Sticky Player column */
 .detail-table th.dt-left, .detail-table td.dt-left {
-  position: sticky; left: 0; z-index: 2;
+  position: -webkit-sticky;
+  position: sticky;
+  left: 0; z-index: 2;
   background: #f0f5f1;
 }
 .detail-table td.dt-left { background: #fff; }
@@ -379,7 +410,9 @@ tr.draw-row td.pn::before { content: "♛ "; color: var(--gold); }
 
 /* Sticky Total column */
 .detail-table th.dt-right, .detail-table td.dt-right {
-  position: sticky; right: 0; z-index: 2;
+  position: -webkit-sticky;
+  position: sticky;
+  right: 0; z-index: 2;
   background: #f0f5f1;
 }
 .detail-table td.dt-right { background: #fff; }
@@ -495,10 +528,12 @@ tr.draw-row td.pn::before { content: "♛ "; color: var(--gold); }
         <span class="rw-name" id="rw-name">—</span>
       </div>
       <div class="score-table-wrap">
+        <div class="score-table-inner">
         <table>
           <thead id="score-thead"></thead>
           <tbody id="score-tbody"></tbody>
         </table>
+        </div>
       </div>
       <div id="winner-hint" style="display:none;text-align:center;padding:6px 14px 0;font-size:0.78rem;color:#b07d12;font-weight:700;">
         🏆 Tap a Winner button to select who went out first
@@ -518,10 +553,12 @@ tr.draw-row td.pn::before { content: "♛ "; color: var(--gold); }
       </div>
       <div class="rounds-won-summary" id="rounds-won-summary"></div>
       <div class="score-table-wrap" style="margin:14px 0">
+        <div class="score-table-inner">
         <table>
           <thead id="final-thead"></thead>
           <tbody id="final-tbody"></tbody>
         </table>
+        </div>
       </div>
       <div class="finish-location">
         <label>📍 Where did you play?</label>
