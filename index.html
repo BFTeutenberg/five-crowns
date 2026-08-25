@@ -154,19 +154,26 @@ input::placeholder { color: var(--text-dim); opacity: 0.5; }
 /* ── GAME SCREEN ── */
 .round-bar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 14px 8px; background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 8px 14px; background: var(--surface); border-bottom: 1px solid var(--border);
+  gap: 8px;
 }
-.round-info { font-family: 'Playfair Display', serif; color: var(--green); font-size: 0.95rem; font-weight: 700; }
-.pips { display: flex; gap: 5px; align-items: center; }
-.pip { width: 9px; height: 9px; border-radius: 50%; background: var(--bg2); border: 1px solid var(--border); transition: all 0.25s; }
+.round-info {
+  font-family: 'Playfair Display', serif; color: var(--green);
+  font-size: 0.85rem; font-weight: 700; white-space: nowrap;
+}
+.round-bar-right {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0;
+}
+.pips { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end; max-width: 130px; }
+.pip { width: 8px; height: 8px; border-radius: 50%; background: var(--bg2); border: 1px solid var(--border); transition: all 0.25s; }
 .pip.done { background: var(--green-dim); border-color: var(--green); }
 .pip.active { background: var(--green); border-color: var(--green); box-shadow: 0 0 5px rgba(26,92,53,0.5); }
 
 .dealer-chip {
-  display: inline-flex; align-items: center; gap: 5px;
+  display: inline-flex; align-items: center; gap: 4px;
   background: var(--green); color: #fff; border-radius: 20px;
-  padding: 3px 10px 3px 7px; font-size: 0.72rem; font-weight: 700;
-  letter-spacing: 0.04em; white-space: nowrap;
+  padding: 2px 8px 2px 6px; font-size: 0.68rem; font-weight: 700;
+  white-space: nowrap;
 }
 
 .round-winner-bar {
@@ -212,21 +219,17 @@ th.sticky-left, td.sticky-left {
 th.sticky-left { background: #e8f0eb; }
 tbody tr:nth-child(even) td.sticky-left { background: #f0f5f1; }
 
+/* Total column — NOT sticky on mobile to avoid iOS overlap issues.
+   It scrolls with the rounds but is always the last column. */
 th.sticky-right, td.sticky-right {
-  position: -webkit-sticky;
-  position: sticky;
-  right: 0; z-index: 2; background: var(--surface);
+  background: var(--surface);
 }
-th.sticky-right { background: #e8f0eb; }
-tbody tr:nth-child(even) td.sticky-right { background: #f0f5f1; }
+th.sticky-right { background: #e8f0eb; font-weight: 700; }
+tbody tr:nth-child(even) td.sticky-right { background: #faf7f2; }
 
 th.sticky-left::after, td.sticky-left::after {
   content: ''; position: absolute; top: 0; right: -6px; bottom: 0; width: 6px;
   background: linear-gradient(to right, rgba(0,0,0,0.07), transparent); pointer-events: none;
-}
-th.sticky-right::before, td.sticky-right::before {
-  content: ''; position: absolute; top: 0; left: -6px; bottom: 0; width: 6px;
-  background: linear-gradient(to left, rgba(0,0,0,0.07), transparent); pointer-events: none;
 }
 
 thead th {
@@ -519,7 +522,7 @@ tr.draw-row td.pn::before { content: "♛ "; color: var(--gold); }
     <div id="game-screen" style="display:none">
       <div class="round-bar">
         <span class="round-info" id="round-label">Round 1 of 11</span>
-        <div style="display:flex;align-items:center;gap:8px">
+        <div class="round-bar-right">
           <div class="dealer-chip">🃏 <span id="dealer-name">Player 1</span></div>
           <div class="pips" id="pips"></div>
         </div>
