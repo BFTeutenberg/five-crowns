@@ -190,25 +190,20 @@ input::placeholder { color: var(--text-dim); opacity: 0.5; }
 /* ── SCORE TABLE ── */
 .score-table-wrap {
   overflow-x: auto;
-  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   padding: 0 8px;
   position: relative;
   width: 100%;
-  max-width: 100%;
   display: block;
-}
-/* Inner div to force iOS to scroll rather than clip */
-.score-table-inner {
-  display: block;
-  width: max-content;
-  min-width: 100%;
+  /* iOS Safari needs explicit overflow on a block element */
+  -webkit-overflow-scrolling: touch;
 }
 table {
   width: auto;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 0.85rem;
+  /* min-width set dynamically via JS based on column count */
 }
 
 th.sticky-left, td.sticky-left {
@@ -532,12 +527,10 @@ tr.draw-row td.pn::before { content: "♛ "; color: var(--gold); }
         <span class="rw-name" id="rw-name">—</span>
       </div>
       <div class="score-table-wrap">
-        <div class="score-table-inner">
-        <table>
+        <table id="score-table-el">
           <thead id="score-thead"></thead>
           <tbody id="score-tbody"></tbody>
         </table>
-        </div>
       </div>
       <div id="winner-hint" style="display:none;text-align:center;padding:6px 14px 0;font-size:0.78rem;color:#b07d12;font-weight:700;">
         🏆 Tap a Winner button to select who went out first
@@ -557,12 +550,10 @@ tr.draw-row td.pn::before { content: "♛ "; color: var(--gold); }
       </div>
       <div class="rounds-won-summary" id="rounds-won-summary"></div>
       <div class="score-table-wrap" style="margin:14px 0">
-        <div class="score-table-inner">
-        <table>
+        <table id="final-table-el">
           <thead id="final-thead"></thead>
           <tbody id="final-tbody"></tbody>
         </table>
-        </div>
       </div>
       <div class="finish-location">
         <label>📍 Where did you play?</label>
@@ -727,8 +718,8 @@ function computeTotal(pi, upToRound) {
 function renderGameTable() {
   const r = state.currentRound;
 
-  // Round label & dealer
-  document.getElementById('round-label').textContent = `${ROUND_NAMES[r]} · Round ${r+1} of ${MAX_ROUNDS}`;
+  // Round label — short form to prevent wrapping
+  document.getElementById('round-label').textContent = `${ROUND_NAMES[r]} · Rd ${r+1}/${MAX_ROUNDS}`;
   document.getElementById('dealer-name').textContent  = getPlayerName(r % state.activePlayers);
 
   // Previous round winner bar
@@ -752,10 +743,17 @@ function renderGameTable() {
     pipsEl.appendChild(d);
   }
 
+  // Column widths in px
+  const COL_PLAYER = 70;
+  const COL_ROUND  = 52;
+  const COL_TOTAL  = 42;
+  const numRounds  = r + 1;
+  const tableMinW  = COL_PLAYER + (numRounds * COL_ROUND) + COL_TOTAL;
+
   // Table header
-  let hdr = '<tr><th class="sticky-left" style="text-align:left;padding-left:10px">Player</th>';
-  for(let i=0;i<=r;i++) hdr += `<th class="rh">${ROUND_NAMES[i]}</th>`;
-  hdr += '<th class="sticky-right">Total</th></tr>';
+  let hdr = `<tr><th class="sticky-left" style="text-align:left;padding-left:8px;min-width:${COL_PLAYER}px">Player</th>`;
+  for(let i=0;i<=r;i++) hdr += `<th class="rh" style="min-width:${COL_ROUND}px;width:${COL_ROUND}px">${ROUND_NAMES[i]}</th>`;
+  hdr += `<th class="sticky-right" style="min-width:${COL_TOTAL}px">Total</th></tr>`;
   document.getElementById('score-thead').innerHTML = hdr;
 
   // Table body
@@ -790,6 +788,10 @@ function renderGameTable() {
     body += `<td class="tot sticky-right">${tot}</td></tr>`;
   }
   document.getElementById('score-tbody').innerHTML = body;
+
+  // Force explicit min-width on the table so iOS Safari scrolls it correctly
+  const tbl = document.getElementById('score-table-el');
+  if(tbl) tbl.style.minWidth = tableMinW + 'px';
 
   checkAdvanceBtn();
 
@@ -951,9 +953,12 @@ function showFinishScreen() {
   document.getElementById('rounds-won-summary').innerHTML = sumHtml;
 
   // Final scores table
-  let hdr = '<tr><th class="sticky-left" style="text-align:left;padding-left:10px">Player</th>';
-  for(let r=0;r<MAX_ROUNDS;r++) hdr += `<th class="rh">${ROUND_NAMES[r]}</th>`;
-  hdr += '<th class="sticky-right">Total</th></tr>';
+  const COL_PLAYER = 70, COL_ROUND = 52, COL_TOTAL = 42;
+  const finalMinW  = COL_PLAYER + (MAX_ROUNDS * COL_ROUND) + COL_TOTAL;
+
+  let hdr = `<tr><th class="sticky-left" style="text-align:left;padding-left:8px;min-width:${COL_PLAYER}px">Player</th>`;
+  for(let r=0;r<MAX_ROUNDS;r++) hdr += `<th class="rh" style="min-width:${COL_ROUND}px;width:${COL_ROUND}px">${ROUND_NAMES[r]}</th>`;
+  hdr += `<th class="sticky-right" style="min-width:${COL_TOTAL}px">Total</th></tr>`;
   document.getElementById('final-thead').innerHTML = hdr;
 
   let rows = '';
@@ -972,6 +977,9 @@ function showFinishScreen() {
     rows += `<td class="tot sticky-right">${tot}</td></tr>`;
   }
   document.getElementById('final-tbody').innerHTML = rows;
+
+  const ftbl = document.getElementById('final-table-el');
+  if(ftbl) ftbl.style.minWidth = finalMinW + 'px';
 
   requestAnimationFrame(()=>{
     const wrap = document.querySelector('#finish-screen .score-table-wrap');
