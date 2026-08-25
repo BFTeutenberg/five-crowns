@@ -4,6 +4,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
 <meta name="theme-color" content="#1a5c35"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -187,78 +190,100 @@ input::placeholder { color: var(--text-dim); opacity: 0.5; }
 }
 .round-winner-bar .rw-name { font-weight: 700; font-family: 'Playfair Display', serif; }
 
-/* ── SCORE TABLE ── */
-.score-table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 0 8px;
-  position: relative;
-  width: 100%;
-  display: block;
-  /* iOS Safari needs explicit overflow on a block element */
-  -webkit-overflow-scrolling: touch;
-}
-table {
-  width: auto;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: 0.85rem;
-  /* min-width set dynamically via JS based on column count */
-}
-
-th.sticky-left, td.sticky-left {
-  position: -webkit-sticky;
-  position: sticky;
-  left: 0; z-index: 2; background: var(--surface);
-}
-th.sticky-left { background: #e8f0eb; }
-tbody tr:nth-child(even) td.sticky-left { background: #f0f5f1; }
-
-/* Total column — NOT sticky on mobile to avoid iOS overlap issues.
-   It scrolls with the rounds but is always the last column. */
-th.sticky-right, td.sticky-right {
+/* ── SCORE TABLE (split layout — bulletproof on iOS) ── */
+.score-split {
+  display: flex;
+  align-items: flex-start;
+  margin: 0 8px;
+  border: 1px solid #d8e4dc;
+  border-radius: 8px;
+  overflow: hidden;
   background: var(--surface);
 }
-th.sticky-right { background: #e8f0eb; font-weight: 700; }
-tbody tr:nth-child(even) td.sticky-right { background: #faf7f2; }
 
-th.sticky-left::after, td.sticky-left::after {
-  content: ''; position: absolute; top: 0; right: -6px; bottom: 0; width: 6px;
-  background: linear-gradient(to right, rgba(0,0,0,0.07), transparent); pointer-events: none;
+/* Fixed left column — player names */
+.score-fixed {
+  flex: 0 0 auto;
+  border-right: 2px solid #c2d8c8;
+  background: var(--surface);
 }
 
-thead th {
-  background: #e8f0eb; border-bottom: 2px solid #c2d8c8; padding: 9px 4px;
-  text-align: center; font-family: 'Playfair Display', serif; font-weight: 700;
-  color: var(--green); white-space: nowrap;
+/* Scrollable right area — rounds + total */
+.score-scroll {
+  flex: 1 1 auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  min-width: 0;
 }
-thead th.rh {
-  font-family: 'Lato', sans-serif; font-size: 0.65rem; font-weight: 700;
-  color: var(--text-dim); letter-spacing: 0.01em; min-width: 52px; width: 52px;
+
+.score-split table {
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  width: auto;
 }
-td {
-  padding: 5px 2px; text-align: center; border-bottom: 1px solid #e4ddd0;
-  vertical-align: middle; background: var(--surface);
+
+/* Uniform row heights so both tables line up */
+.score-split th {
+  height: 38px;
+  background: #e8f0eb;
+  border-bottom: 2px solid #c2d8c8;
+  padding: 0 5px;
+  text-align: center;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  color: var(--green);
+  white-space: nowrap;
+  box-sizing: border-box;
 }
-tbody tr:nth-child(even) td { background: #faf7f2; }
+.score-split th.rh {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  min-width: 56px; width: 56px;
+}
+.score-split td {
+  height: 62px;
+  padding: 0 4px;
+  text-align: center;
+  border-bottom: 1px solid #e4ddd0;
+  vertical-align: middle;
+  background: var(--surface);
+  box-sizing: border-box;
+}
+.score-split tr:nth-child(even) td { background: #faf7f2; }
+.score-split tr:last-child td { border-bottom: none; }
+
+/* Player name cell */
 td.pn {
-  text-align: left; padding-left: 6px; padding-right: 4px; font-weight: 700;
-  font-size: 0.82rem; color: var(--text); white-space: nowrap; min-width: 60px; max-width: 80px;
+  text-align: left;
+  padding: 0 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text);
+  white-space: nowrap;
+  min-width: 74px; max-width: 96px;
   overflow: hidden; text-overflow: ellipsis;
 }
+th.pn-head { min-width: 74px; text-align: left; padding-left: 8px; }
+
+/* Total cell */
 td.tot {
-  font-family: 'Playfair Display', serif; font-weight: 700; font-size: 0.92rem;
-  color: var(--green); padding-left: 4px; padding-right: 4px; min-width: 36px; max-width: 42px;
-  text-align: center;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--green);
+  min-width: 46px;
 }
+th.tot-head { min-width: 46px; }
 
 /* Score cell: input stacked above trophy button */
-.score-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.score-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; justify-content: center; }
 
 .sinput {
-  width: 44px; background: #e8e4dc; border: 1px solid #c8c0b0; border-radius: 5px;
-  color: var(--text); font-family: 'Lato', sans-serif; font-size: 0.82rem;
-  text-align: center; padding: 4px 2px; outline: none; transition: border-color 0.2s, background 0.2s;
+  width: 48px; background: #e8e4dc; border: 1px solid #c8c0b0; border-radius: 5px;
+  color: var(--text); font-family: 'Lato', sans-serif; font-size: 0.85rem;
+  text-align: center; padding: 5px 2px; outline: none; transition: border-color 0.2s, background 0.2s;
 }
 .sinput:focus { border-color: var(--green); background: #fff; box-shadow: 0 0 0 2px rgba(26,92,53,0.15); }
 .sinput.current { background: #dde8e1; border-color: var(--green-dim); }
@@ -266,30 +291,32 @@ td.tot {
 .sinput.past { background: #ece8e0; border-color: #c4bba8; color: #4a4030; }
 .sinput.past:focus { background: #fff; border-color: var(--green-dim); }
 
-/* Trophy button — only shown when score is 0 */
+/* Trophy button — always occupies space (visibility, not display) so rows align */
 .trophy-btn {
-  display: none; width: 44px; padding: 2px 0;
+  visibility: hidden;
+  width: 48px; height: 18px; padding: 0;
   border: 1px solid #c8c0b0; border-radius: 4px;
   background: #f5f0e8; color: #9a8060;
-  font-size: 0.62rem; cursor: pointer; text-align: center;
-  transition: all 0.15s; line-height: 1.5; white-space: nowrap;
+  font-size: 0.6rem; cursor: pointer; text-align: center;
+  transition: all 0.15s; line-height: 16px; white-space: nowrap;
 }
 .trophy-btn:active { transform: scale(0.96); }
-.trophy-btn.visible { display: block; }
+.trophy-btn.visible { visibility: visible; }
 .trophy-btn.selected { background: #fff3c0; border-color: var(--gold); color: #7a5800; font-weight: 700; }
 
 /* Small trophy shown in past round cells for the winner */
-.past-trophy { font-size: 0.8rem; line-height: 1; color: var(--gold); }
+.past-trophy { font-size: 0.75rem; line-height: 18px; height: 18px; color: var(--gold); }
+.past-trophy.empty { visibility: hidden; }
 
 /* Row highlights */
-tr.winner-row td { background: #d4ebda !important; }
-tr.winner-row td.pn { color: var(--green); font-weight: 900; }
-tr.winner-row td.pn::before { content: "♛ "; color: var(--gold); }
-tr.winner-row td.tot { color: var(--green); }
+.score-split tr.winner-row td { background: #d4ebda !important; }
+.score-split tr.winner-row td.pn { color: var(--green); font-weight: 900; }
+.score-split tr.winner-row td.pn::before { content: "♛ "; color: var(--gold); }
+.score-split tr.winner-row td.tot { color: var(--green); }
 
-tr.draw-row td { background: #e8f4ea !important; }
-tr.draw-row td.pn { color: var(--green); font-weight: 900; }
-tr.draw-row td.pn::before { content: "♛ "; color: var(--gold); }
+.score-split tr.draw-row td { background: #e8f4ea !important; }
+.score-split tr.draw-row td.pn { color: var(--green); font-weight: 900; }
+.score-split tr.draw-row td.pn::before { content: "♛ "; color: var(--gold); }
 
 /* ── GAME CONTROLS ── */
 .game-controls { display: flex; gap: 10px; padding: 14px; justify-content: center; flex-wrap: wrap; }
@@ -363,70 +390,37 @@ tr.draw-row td.pn::before { content: "♛ "; color: var(--gold); }
 .gc-toggle.open { transform: rotate(180deg); }
 .game-card-detail { display: none; padding: 0 14px 14px; border-top: 1px solid var(--border); }
 .game-card-detail.open { display: block; }
-.detail-table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+.detail-split {
+  display: flex;
+  align-items: flex-start;
   margin-top: 10px;
-  position: relative;
-  width: 100%;
-  display: block;
+  border: 1px solid #dfe8e2;
+  border-radius: 8px;
+  overflow: hidden;
 }
-.detail-table {
-  width: auto;
-  font-size: 0.8rem;
-  border-collapse: separate;
-  border-spacing: 0;
+.detail-fixed { flex: 0 0 auto; border-right: 2px solid #c2d8c8; }
+.detail-scroll { flex: 1 1 auto; overflow-x: auto; -webkit-overflow-scrolling: touch; min-width: 0; }
+.detail-split table { border-collapse: collapse; font-size: 0.78rem; }
+.detail-split th {
+  height: 30px; background: #f0f5f1; color: var(--text-dim);
+  font-weight: 700; font-size: 0.65rem; text-transform: uppercase;
+  letter-spacing: 0.04em; padding: 0 6px; white-space: nowrap;
+  border-bottom: 1px solid var(--border); box-sizing: border-box;
+  text-align: center;
 }
-.detail-table th {
-  text-align: center; color: var(--text-dim); font-weight: 700; font-size: 0.68rem;
-  text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 5px;
-  border-bottom: 1px solid var(--border); white-space: nowrap;
-  background: #f0f5f1;
-}
-.detail-table th:first-child { text-align: left; padding-left: 8px; }
-.detail-table th:last-child  { text-align: right; padding-right: 8px; }
-.detail-table td {
-  padding: 5px 5px; border-bottom: 1px solid #ede8de;
+.detail-split th.dn-head { text-align: left; min-width: 70px; }
+.detail-split td {
+  height: 32px; padding: 0 6px; border-bottom: 1px solid #ede8de;
   text-align: center; color: var(--text); white-space: nowrap;
-  background: #fff;
+  background: #fff; box-sizing: border-box;
 }
-.detail-table tr:nth-child(even) td { background: #faf7f2; }
-.detail-table td:first-child { text-align: left; padding-left: 8px; font-weight: 700; }
-.detail-table td:last-child  { text-align: right; padding-right: 8px; font-family: 'Playfair Display', serif; font-weight: 700; color: var(--green); }
-.detail-table tr.w td { color: var(--green); font-weight: 700; }
-.detail-table tr.w td:first-child::before { content: "♛ "; color: var(--gold); }
-
-/* Sticky Player column */
-.detail-table th.dt-left, .detail-table td.dt-left {
-  position: -webkit-sticky;
-  position: sticky;
-  left: 0; z-index: 2;
-  background: #f0f5f1;
-}
-.detail-table td.dt-left { background: #fff; }
-.detail-table tr:nth-child(even) td.dt-left { background: #faf7f2; }
-.detail-table tr.w td.dt-left { background: #eaf4ec !important; }
-
-/* Sticky Total column */
-.detail-table th.dt-right, .detail-table td.dt-right {
-  position: -webkit-sticky;
-  position: sticky;
-  right: 0; z-index: 2;
-  background: #f0f5f1;
-}
-.detail-table td.dt-right { background: #fff; }
-.detail-table tr:nth-child(even) td.dt-right { background: #faf7f2; }
-.detail-table tr.w td.dt-right { background: #eaf4ec !important; }
-
-/* Scroll-edge shadows */
-.detail-table th.dt-left::after, .detail-table td.dt-left::after {
-  content: ''; position: absolute; top: 0; right: -5px; bottom: 0; width: 5px;
-  background: linear-gradient(to right, rgba(0,0,0,0.06), transparent); pointer-events: none;
-}
-.detail-table th.dt-right::before, .detail-table td.dt-right::before {
-  content: ''; position: absolute; top: 0; left: -5px; bottom: 0; width: 5px;
-  background: linear-gradient(to left, rgba(0,0,0,0.06), transparent); pointer-events: none;
-}
+.detail-split tr:nth-child(even) td { background: #faf7f2; }
+.detail-split tr:last-child td { border-bottom: none; }
+.detail-split td.dn { text-align: left; font-weight: 700; min-width: 70px; max-width: 96px; overflow: hidden; text-overflow: ellipsis; }
+.detail-split td.dtot { font-family: 'Playfair Display', serif; font-weight: 700; color: var(--green); min-width: 44px; }
+.detail-split th.dtot-head { min-width: 44px; }
+.detail-split tr.w td { color: var(--green); font-weight: 700; }
+.detail-split tr.w td.dn::before { content: "♛ "; color: var(--gold); }
 .archive-rw { margin-top: 10px; font-size: 0.76rem; color: var(--text-dim); line-height: 1.6; }
 .archive-rw strong { color: var(--green); }
 .btn-del-game {
@@ -526,11 +520,19 @@ tr.draw-row td.pn::before { content: "♛ "; color: var(--gold); }
         <span class="rw-label" id="rw-label">Last round:</span>
         <span class="rw-name" id="rw-name">—</span>
       </div>
-      <div class="score-table-wrap">
-        <table id="score-table-el">
-          <thead id="score-thead"></thead>
-          <tbody id="score-tbody"></tbody>
-        </table>
+      <div class="score-split">
+        <div class="score-fixed">
+          <table>
+            <thead><tr><th class="pn-head">Player</th></tr></thead>
+            <tbody id="score-names"></tbody>
+          </table>
+        </div>
+        <div class="score-scroll" id="score-scroll">
+          <table>
+            <thead id="score-thead"></thead>
+            <tbody id="score-tbody"></tbody>
+          </table>
+        </div>
       </div>
       <div id="winner-hint" style="display:none;text-align:center;padding:6px 14px 0;font-size:0.78rem;color:#b07d12;font-weight:700;">
         🏆 Tap a Winner button to select who went out first
@@ -549,11 +551,19 @@ tr.draw-row td.pn::before { content: "♛ "; color: var(--gold); }
         <p id="winner-score"></p>
       </div>
       <div class="rounds-won-summary" id="rounds-won-summary"></div>
-      <div class="score-table-wrap" style="margin:14px 0">
-        <table id="final-table-el">
-          <thead id="final-thead"></thead>
-          <tbody id="final-tbody"></tbody>
-        </table>
+      <div class="score-split" style="margin:14px 8px">
+        <div class="score-fixed">
+          <table>
+            <thead><tr><th class="pn-head">Player</th></tr></thead>
+            <tbody id="final-names"></tbody>
+          </table>
+        </div>
+        <div class="score-scroll">
+          <table>
+            <thead id="final-thead"></thead>
+            <tbody id="final-tbody"></tbody>
+          </table>
+        </div>
       </div>
       <div class="finish-location">
         <label>📍 Where did you play?</label>
@@ -743,24 +753,23 @@ function renderGameTable() {
     pipsEl.appendChild(d);
   }
 
-  // Column widths in px
-  const COL_PLAYER = 70;
-  const COL_ROUND  = 52;
-  const COL_TOTAL  = 42;
-  const numRounds  = r + 1;
-  const tableMinW  = COL_PLAYER + (numRounds * COL_ROUND) + COL_TOTAL;
+  // ── Fixed left table: player names ──
+  let namesHtml = '';
+  for(let pi=0;pi<state.activePlayers;pi++){
+    namesHtml += `<tr><td class="pn">${getPlayerName(pi)}</td></tr>`;
+  }
+  document.getElementById('score-names').innerHTML = namesHtml;
 
-  // Table header
-  let hdr = `<tr><th class="sticky-left" style="text-align:left;padding-left:8px;min-width:${COL_PLAYER}px">Player</th>`;
-  for(let i=0;i<=r;i++) hdr += `<th class="rh" style="min-width:${COL_ROUND}px;width:${COL_ROUND}px">${ROUND_NAMES[i]}</th>`;
-  hdr += `<th class="sticky-right" style="min-width:${COL_TOTAL}px">Total</th></tr>`;
+  // ── Scrollable right table: rounds + total ──
+  let hdr = '<tr>';
+  for(let i=0;i<=r;i++) hdr += `<th class="rh">${ROUND_NAMES[i]}</th>`;
+  hdr += '<th class="tot-head">Total</th></tr>';
   document.getElementById('score-thead').innerHTML = hdr;
 
-  // Table body
   let body = '';
   for(let pi=0;pi<state.activePlayers;pi++){
     const tot = computeTotal(pi, r);
-    body += `<tr><td class="pn sticky-left">${getPlayerName(pi)}</td>`;
+    body += '<tr>';
 
     // Past rounds
     for(let ri=0;ri<r;ri++){
@@ -769,7 +778,7 @@ function renderGameTable() {
         <input class="sinput past" type="text" inputmode="numeric" pattern="[0-9]*"
           value="${state.scores[pi][ri]}"
           oninput="onScoreInput(${pi},${ri},this.value)"/>
-        ${isRW ? '<div class="past-trophy">🏆</div>' : ''}
+        <div class="past-trophy${isRW?'':' empty'}">🏆</div>
       </div></td>`;
     }
 
@@ -782,22 +791,19 @@ function renderGameTable() {
         id="sinput-${pi}" value="${curVal}"
         oninput="onScoreInput(${pi},${r},this.value)"/>
       <button class="trophy-btn${isZero?' visible':''}${selected?' selected':''}"
-        id="trophy-${pi}" onclick="selectRoundWinner(${pi})">🏆 Winner</button>
+        id="trophy-${pi}" onclick="selectRoundWinner(${pi})">🏆 Win</button>
     </div></td>`;
 
-    body += `<td class="tot sticky-right">${tot}</td></tr>`;
+    body += `<td class="tot">${tot}</td></tr>`;
   }
   document.getElementById('score-tbody').innerHTML = body;
 
-  // Force explicit min-width on the table so iOS Safari scrolls it correctly
-  const tbl = document.getElementById('score-table-el');
-  if(tbl) tbl.style.minWidth = tableMinW + 'px';
-
   checkAdvanceBtn();
 
+  // Auto-scroll to current round
   requestAnimationFrame(()=>{
-    const wrap = document.querySelector('#game-screen .score-table-wrap');
-    if(wrap) wrap.scrollLeft = wrap.scrollWidth;
+    const sc = document.getElementById('score-scroll');
+    if(sc) sc.scrollLeft = sc.scrollWidth;
   });
 }
 
@@ -821,9 +827,12 @@ function onScoreInput(pi, ri, val) {
     autoSelectWinner();
   }
 
-  // Update row total live
+  // Update row total live (total cell lives in the scrollable table)
   const rows = document.getElementById('score-tbody').querySelectorAll('tr');
-  if(rows[pi]) rows[pi].querySelector('.tot').textContent = computeTotal(pi, r);
+  if(rows[pi]) {
+    const totCell = rows[pi].querySelector('.tot');
+    if(totCell) totCell.textContent = computeTotal(pi, r);
+  }
 
   checkAdvanceBtn();
 }
@@ -952,13 +961,19 @@ function showFinishScreen() {
   });
   document.getElementById('rounds-won-summary').innerHTML = sumHtml;
 
-  // Final scores table
-  const COL_PLAYER = 70, COL_ROUND = 52, COL_TOTAL = 42;
-  const finalMinW  = COL_PLAYER + (MAX_ROUNDS * COL_ROUND) + COL_TOTAL;
+  // Final scores — fixed names column
+  let namesHtml = '';
+  for(let pi=0;pi<state.activePlayers;pi++){
+    const isWinner = winnerIdxs.includes(pi);
+    const rowClass = isWinner ? (isDraw?'draw-row':'winner-row') : '';
+    namesHtml += `<tr class="${rowClass}"><td class="pn">${getPlayerName(pi)}</td></tr>`;
+  }
+  document.getElementById('final-names').innerHTML = namesHtml;
 
-  let hdr = `<tr><th class="sticky-left" style="text-align:left;padding-left:8px;min-width:${COL_PLAYER}px">Player</th>`;
-  for(let r=0;r<MAX_ROUNDS;r++) hdr += `<th class="rh" style="min-width:${COL_ROUND}px;width:${COL_ROUND}px">${ROUND_NAMES[r]}</th>`;
-  hdr += `<th class="sticky-right" style="min-width:${COL_TOTAL}px">Total</th></tr>`;
+  // Final scores — scrollable rounds + total
+  let hdr = '<tr>';
+  for(let r=0;r<MAX_ROUNDS;r++) hdr += `<th class="rh">${ROUND_NAMES[r]}</th>`;
+  hdr += '<th class="tot-head">Total</th></tr>';
   document.getElementById('final-thead').innerHTML = hdr;
 
   let rows = '';
@@ -966,25 +981,17 @@ function showFinishScreen() {
     const tot      = totals[pi];
     const isWinner = winnerIdxs.includes(pi);
     const rowClass = isWinner ? (isDraw?'draw-row':'winner-row') : '';
-    rows += `<tr class="${rowClass}"><td class="pn sticky-left">${getPlayerName(pi)}</td>`;
+    rows += `<tr class="${rowClass}">`;
     for(let r=0;r<MAX_ROUNDS;r++){
       const isRW = state.roundWinners[r]===pi;
       rows += `<td><div class="score-cell">
-        <input class="sinput past" type="text" value="${state.scores[pi][r]||'—'}" readonly style="pointer-events:none;width:44px"/>
-        ${isRW?'<div class="past-trophy">🏆</div>':''}
+        <input class="sinput past" type="text" value="${state.scores[pi][r]||'—'}" readonly style="pointer-events:none"/>
+        <div class="past-trophy${isRW?'':' empty'}">🏆</div>
       </div></td>`;
     }
-    rows += `<td class="tot sticky-right">${tot}</td></tr>`;
+    rows += `<td class="tot">${tot}</td></tr>`;
   }
   document.getElementById('final-tbody').innerHTML = rows;
-
-  const ftbl = document.getElementById('final-table-el');
-  if(ftbl) ftbl.style.minWidth = finalMinW + 'px';
-
-  requestAnimationFrame(()=>{
-    const wrap = document.querySelector('#finish-screen .score-table-wrap');
-    if(wrap) wrap.scrollLeft = 0;
-  });
 }
 
 // ── ARCHIVE ────────────────────────────────────────
@@ -1063,22 +1070,33 @@ function renderArchive() {
       </div>
       <div class="game-card-detail" id="detail-${idx}">
         ${rwLines.length ? `<div class="archive-rw">🏆 Rounds won — ${rwLines.join(' · ')}</div>` : ''}
-        <div class="detail-table-wrap">
-        <table class="detail-table">
-          <thead><tr>
-            <th class="dt-left">Player</th>
-            ${(entry.players[0]?.scores||[]).map((_,r)=>`<th>${ROUND_NAMES[r]||'R'+(r+1)}</th>`).join('')}
-            <th class="dt-right">Total</th>
-          </tr></thead>
-          <tbody>
-            ${(entry.players||[]).map((p,pi)=>`
-              <tr class="${entry.winner&&(entry.winner===p.name||entry.winner.includes(p.name))?'w':''}">
-                <td class="dt-left">${p.name}</td>
-                ${(p.scores||[]).map((s,ri)=>`<td>${s||'—'}${rw[ri]!==null&&rw[ri]!==undefined&&entry.players[rw[ri]]?.name===p.name?' 🏆':''}</td>`).join('')}
-                <td class="dt-right">${p.total}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
+        <div class="detail-split">
+          <div class="detail-fixed">
+            <table>
+              <thead><tr><th class="dn-head">Player</th></tr></thead>
+              <tbody>
+                ${(entry.players||[]).map(p=>`
+                  <tr class="${entry.winner&&(entry.winner===p.name||entry.winner.includes(p.name))?'w':''}">
+                    <td class="dn">${p.name}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="detail-scroll">
+            <table>
+              <thead><tr>
+                ${(entry.players[0]?.scores||[]).map((_,r)=>`<th>${ROUND_NAMES[r]||'R'+(r+1)}</th>`).join('')}
+                <th class="dtot-head">Total</th>
+              </tr></thead>
+              <tbody>
+                ${(entry.players||[]).map(p=>`
+                  <tr class="${entry.winner&&(entry.winner===p.name||entry.winner.includes(p.name))?'w':''}">
+                    ${(p.scores||[]).map((s,ri)=>`<td>${s||'—'}${rw[ri]!==null&&rw[ri]!==undefined&&entry.players[rw[ri]]?.name===p.name?' 🏆':''}</td>`).join('')}
+                    <td class="dtot">${p.total}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
         </div>
         <button class="btn-del-game" onclick="deleteGame(${entry.id},event)">Delete this game</button>
       </div>`;
