@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -484,6 +483,18 @@ th.tot-head { min-width: 46px; }
     <!-- SETUP -->
     <div id="setup-screen">
       <datalist id="name-suggestions"></datalist>
+
+      <div id="resume-banner" style="display:none;background:#fff6e0;border:1px solid #e0c070;border-radius:14px;padding:16px;margin-bottom:14px">
+        <div style="font-family:'Playfair Display',serif;font-size:0.95rem;color:#7a5800;font-weight:700;margin-bottom:6px">
+          ⏸️ Game in progress
+        </div>
+        <div id="resume-details" style="font-size:0.8rem;color:#6b5a30;line-height:1.5;margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px">
+          <button onclick="doResume()" style="flex:1;padding:11px;border-radius:9px;border:none;background:#1a5c35;color:#fff;font-family:Lato,sans-serif;font-size:0.88rem;font-weight:700;cursor:pointer">Resume Game</button>
+          <button onclick="discardResume()" style="padding:11px 16px;border-radius:9px;border:1px solid #c9b280;background:transparent;color:#8a7340;font-family:Lato,sans-serif;font-size:0.88rem;font-weight:700;cursor:pointer">Discard</button>
+        </div>
+      </div>
+
       <div class="card">
         <h2>New Game</h2>
         <div class="label-row">
@@ -702,7 +713,9 @@ function startGame() {
     document.getElementById('setup-location').value.trim();
   document.getElementById('finish-notes').value =
     document.getElementById('setup-notes').value.trim();
+  document.getElementById('resume-banner').style.display = 'none';
   showGameScreen();
+  saveProgress();
 }
 
 function showGameScreen() {
@@ -835,6 +848,7 @@ function onScoreInput(pi, ri, val) {
   }
 
   checkAdvanceBtn();
+  saveProgress();
 }
 
 function autoSelectWinner() {
@@ -881,6 +895,7 @@ function selectRoundWinnerInternal(pi) {
     if(b) b.classList.toggle('selected', i===pi);
   }
   checkAdvanceBtn();
+  saveProgress();
 }
 
 function selectRoundWinner(pi) {
@@ -921,7 +936,9 @@ function advanceRound() {
   if(state.currentRound < MAX_ROUNDS-1){
     state.currentRound++;
     renderGameTable();
+    saveProgress();
   } else {
+    clearProgress();
     showFinishScreen();
   }
 }
@@ -1150,7 +1167,89 @@ function resetToSetup() {
   document.getElementById('setup-location').value = '';
   document.getElementById('setup-notes').value    = '';
   document.getElementById('saved-notice').style.display  = 'none';
+  document.getElementById('resume-banner').style.display = 'none';
+  clearProgress();
+  buildPlayerInputs();
 }
+
+// ── AUTO-SAVE IN-PROGRESS GAME ──────────────────────
+const RESUME_KEY = 'fivecrowns_inprogress';
+
+function saveProgress() {
+  if(state.phase !== 'game') return;
+  try {
+    localStorage.setItem(RESUME_KEY, JSON.stringify({
+      activePlayers: state.activePlayers,
+      playerNames:   state.playerNames,
+      scores:        state.scores,
+      roundWinners:  state.roundWinners,
+      manualWinner:  state.manualWinner,
+      currentRound:  state.currentRound,
+      location:      document.getElementById('finish-location').value || '',
+      notes:         document.getElementById('finish-notes').value || '',
+      savedAt:       Date.now()
+    }));
+  } catch(e) { /* storage full or unavailable — ignore */ }
+}
+
+function clearProgress() {
+  try { localStorage.removeItem(RESUME_KEY); } catch(e) {}
+}
+
+function getProgress() {
+  try {
+    const raw = localStorage.getItem(RESUME_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+function resumeGame(saved) {
+  state.activePlayers = saved.activePlayers;
+  state.playerNames   = saved.playerNames;
+  state.scores        = saved.scores;
+  state.roundWinners  = saved.roundWinners;
+  state.manualWinner  = saved.manualWinner || false;
+  state.currentRound  = saved.currentRound;
+  state.phase         = 'game';
+  document.getElementById('finish-location').value = saved.location || '';
+  document.getElementById('finish-notes').value    = saved.notes || '';
+  showGameScreen();
+}
+
+function checkForSavedGame() {
+  const saved = getProgress();
+  if(!saved || !saved.playerNames) return;
+
+  const names = saved.playerNames.slice(0, saved.activePlayers)
+    .map((n,i)=>(n||'').trim() || `Player ${i+1}`).join(', ');
+  const roundName = ROUND_NAMES[saved.currentRound] || `Round ${saved.currentRound+1}`;
+  const when = new Date(saved.savedAt).toLocaleString('en-GB',
+    {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+
+  document.getElementById('resume-details').innerHTML =
+    `<strong>${names}</strong><br/>Up to <strong>${roundName}</strong> · saved ${when}`;
+  document.getElementById('resume-banner').style.display = 'block';
+}
+
+function doResume() {
+  const saved = getProgress();
+  if(saved) resumeGame(saved);
+  document.getElementById('resume-banner').style.display = 'none';
+}
+
+function discardResume() {
+  showConfirmModal('Discard the saved game in progress?', ()=>{
+    clearProgress();
+    document.getElementById('resume-banner').style.display = 'none';
+  });
+}
+
+// Safety net — save whenever the page is backgrounded or closed
+window.addEventListener('pagehide', saveProgress);
+window.addEventListener('beforeunload', saveProgress);
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'hidden') saveProgress();
+});
 
 // ── INSTALL ─────────────────────────────────────────
 let deferredPrompt = null;
@@ -1167,6 +1266,7 @@ function dismissInstall(){
 // ── INIT ────────────────────────────────────────────
 buildCountBtns();
 buildPlayerInputs();
+checkForSavedGame();
 setTimeout(()=>{
   const dismissed = localStorage.getItem('fivecrowns_install_dismissed');
   if(/android/i.test(navigator.userAgent) && /chrome/i.test(navigator.userAgent) && !dismissed && !deferredPrompt)
